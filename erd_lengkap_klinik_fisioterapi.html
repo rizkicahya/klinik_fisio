@@ -1,0 +1,286 @@
+
+<h2 class="sr-only">ERD Lengkap Klinik Fisioterapi — 21 entitas dalam satu halaman, alur dari WhatsApp hingga feedback</h2>
+<style>
+.erd-wrap { overflow: auto; width: 100%; }
+.erd-wrap svg { min-width: 900px; }
+.info-bar { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--color-text-secondary); padding: 6px 0 10px; border-bottom: 1px solid var(--color-border-tertiary); margin-bottom: 10px; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500; background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+</style>
+
+<div style="padding: 10px 0 6px">
+  <div class="info-bar">
+    <span><strong style="color:var(--color-text-primary)">21</strong> entitas</span>
+    <span><strong style="color:var(--color-text-primary)">30</strong> relasi</span>
+    <span>|| = satu &nbsp;·&nbsp; o{ = banyak &nbsp;·&nbsp; o| = opsional</span>
+    <span style="margin-left:auto; opacity:.7">← geser jika perlu →</span>
+  </div>
+  <div class="erd-wrap">
+    <div id="erd-full"></div>
+  </div>
+</div>
+
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+  },
+});
+
+const src = `erDiagram
+  SUMBER_RUJUKAN {
+    uuid id PK
+    string tipe
+    string nama_sumber
+  }
+  WA_INQUIRY {
+    uuid id PK
+    uuid sumber_rujukan_id FK
+    string no_wa
+    string nama_pengirim
+    string status_inquiry
+    timestamp waktu_masuk
+    timestamp waktu_dibalas
+  }
+  PASIEN {
+    uuid id PK
+    uuid wa_inquiry_id FK
+    string no_rm
+    string nama_lengkap
+    string no_wa
+    date tanggal_lahir
+    string jenis_kelamin
+    string status_pasien
+    timestamp terdaftar_pada
+  }
+  KONTAK_DARURAT {
+    uuid id PK
+    uuid pasien_id FK
+    string nama
+    string hubungan
+    string no_wa
+  }
+  STAFF {
+    uuid id PK
+    string nama
+    string peran
+    string spesialisasi
+    string no_str
+    string no_wa
+    string status_aktif
+  }
+  JADWAL_STAFF {
+    uuid id PK
+    uuid staff_id FK
+    date tgl_kerja
+    time jam_mulai
+    time jam_selesai
+    int maks_pasien
+    string status
+  }
+  JANJI_TEMU {
+    uuid id PK
+    uuid pasien_id FK
+    uuid staff_id FK
+    timestamp tgl_janji
+    int durasi_menit
+    string tipe_layanan
+    string booking_via
+    string status_janji
+    boolean sudah_diingatkan_wa
+  }
+  REKAM_MEDIS {
+    uuid id PK
+    uuid pasien_id FK
+    string keluhan_utama
+    text riwayat_penyakit
+    text alergi
+    timestamp dibuat_pada
+  }
+  DIAGNOSIS {
+    uuid id PK
+    uuid rekam_medis_id FK
+    uuid didiagnosis_oleh FK
+    string kode_icd
+    string deskripsi_diagnosa
+    string area_tubuh
+    string tingkat_keparahan
+    timestamp tgl_diagnosis
+  }
+  RENCANA_TERAPI {
+    uuid id PK
+    uuid rekam_medis_id FK
+    uuid diagnosis_id FK
+    uuid terapis_id FK
+    text tujuan_terapi
+    int total_sesi_rencana
+    int frekuensi_per_minggu
+    date tgl_mulai
+    date tgl_target_selesai
+    string status_rencana
+  }
+  SESI_TERAPI {
+    uuid id PK
+    uuid rencana_terapi_id FK
+    uuid janji_temu_id FK
+    uuid terapis_id FK
+    date tgl_sesi
+    int durasi_menit
+    int skor_nyeri_sebelum
+    int skor_nyeri_sesudah
+    int skor_progress
+    string status_sesi
+  }
+  LATIHAN_SESI {
+    uuid id PK
+    uuid sesi_id FK
+    string nama_latihan
+    string tipe_modalitas
+    int set
+    int repetisi
+    int durasi_menit
+    text catatan
+  }
+  INVOICE {
+    uuid id PK
+    uuid pasien_id FK
+    uuid janji_temu_id FK
+    string no_invoice
+    decimal subtotal
+    decimal diskon
+    decimal total
+    string status_bayar
+    timestamp tgl_invoice
+  }
+  ITEM_INVOICE {
+    uuid id PK
+    uuid invoice_id FK
+    string deskripsi
+    string jenis_item
+    int qty
+    decimal harga_satuan
+    decimal subtotal
+  }
+  PEMBAYARAN {
+    uuid id PK
+    uuid invoice_id FK
+    decimal jumlah
+    string metode_bayar
+    string no_referensi
+    timestamp tgl_bayar
+    string status
+  }
+  PAKET_LAYANAN {
+    uuid id PK
+    string nama_paket
+    int jumlah_sesi
+    decimal harga
+    int masa_berlaku_hari
+    boolean aktif
+  }
+  PASIEN_PAKET {
+    uuid id PK
+    uuid pasien_id FK
+    uuid paket_id FK
+    uuid invoice_id FK
+    int sesi_terpakai
+    date tgl_beli
+    date tgl_kadaluarsa
+    string status
+  }
+  PERALATAN {
+    uuid id PK
+    string nama_alat
+    string tipe_modalitas
+    string no_seri
+    string kondisi
+    string lokasi_ruangan
+    date tgl_servis_terakhir
+    date tgl_servis_berikutnya
+  }
+  PENGGUNAAN_ALAT {
+    uuid id PK
+    uuid sesi_id FK
+    uuid peralatan_id FK
+    int durasi_pemakaian_menit
+    text catatan_penggunaan
+  }
+  FOLLOW_UP_WA {
+    uuid id PK
+    uuid pasien_id FK
+    uuid staff_id FK
+    string tipe_followup
+    text isi_pesan
+    timestamp tgl_kirim
+    string status_respon
+    text respon_pasien
+  }
+  FEEDBACK {
+    uuid id PK
+    uuid pasien_id FK
+    uuid staff_id FK
+    string sumber
+    int rating
+    text komentar
+    timestamp tgl_feedback
+    boolean dipublikasikan
+  }
+
+  SUMBER_RUJUKAN ||--o{ WA_INQUIRY : "menghasilkan"
+  WA_INQUIRY ||--o| PASIEN : "dikonversi"
+  PASIEN ||--o{ KONTAK_DARURAT : "memiliki"
+  PASIEN ||--o{ REKAM_MEDIS : "memiliki"
+  PASIEN ||--o{ JANJI_TEMU : "booking WA"
+  PASIEN ||--o{ INVOICE : "ditagih"
+  PASIEN ||--o{ PASIEN_PAKET : "memiliki"
+  PASIEN ||--o{ FOLLOW_UP_WA : "menerima"
+  PASIEN ||--o{ FEEDBACK : "memberikan"
+  STAFF ||--o{ JADWAL_STAFF : "memiliki"
+  STAFF ||--o{ JANJI_TEMU : "menangani"
+  STAFF ||--o{ DIAGNOSIS : "mendiagnosis"
+  STAFF ||--o{ RENCANA_TERAPI : "menyusun"
+  STAFF ||--o{ SESI_TERAPI : "menangani"
+  STAFF ||--o{ FOLLOW_UP_WA : "mengirim"
+  STAFF ||--o{ FEEDBACK : "dinilai di"
+  JANJI_TEMU ||--o| SESI_TERAPI : "terhubung"
+  JANJI_TEMU ||--o| INVOICE : "menghasilkan"
+  REKAM_MEDIS ||--o{ DIAGNOSIS : "berisi"
+  REKAM_MEDIS ||--o{ RENCANA_TERAPI : "menghasilkan"
+  DIAGNOSIS ||--o{ RENCANA_TERAPI : "mendasari"
+  RENCANA_TERAPI ||--o{ SESI_TERAPI : "terdiri dari"
+  SESI_TERAPI ||--o{ LATIHAN_SESI : "mencakup"
+  SESI_TERAPI ||--o{ PENGGUNAAN_ALAT : "menggunakan"
+  PERALATAN ||--o{ PENGGUNAAN_ALAT : "dipakai di"
+  INVOICE ||--o{ ITEM_INVOICE : "berisi"
+  INVOICE ||--o{ PEMBAYARAN : "dibayar"
+  INVOICE ||--o| PASIEN_PAKET : "terhubung"
+  PAKET_LAYANAN ||--o{ PASIEN_PAKET : "dibeli"`;
+
+try {
+  const { svg } = await mermaid.render('erd-full-svg', src);
+  document.getElementById('erd-full').innerHTML = svg;
+
+  document.querySelectorAll('#erd-full svg .node').forEach(node => {
+    const fp = node.querySelector('path[d]');
+    if (!fp) return;
+    const nums = fp.getAttribute('d').match(/-?[\d.]+/g)?.map(Number);
+    if (!nums || nums.length < 8) return;
+    const xs = [nums[0],nums[2],nums[4],nums[6]], ys = [nums[1],nums[3],nums[5],nums[7]];
+    const x = Math.min(...xs), y = Math.min(...ys), w = Math.max(...xs)-x, h = Math.max(...ys)-y;
+    const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',w); r.setAttribute('height',h); r.setAttribute('rx','8');
+    for (const a of ['fill','stroke','stroke-width','class','style']) { if (fp.hasAttribute(a)) r.setAttribute(a,fp.getAttribute(a)); }
+    fp.replaceWith(r);
+  });
+  document.querySelectorAll('#erd-full svg .row-rect-odd path, #erd-full svg .row-rect-even path').forEach(p => p.setAttribute('stroke','none'));
+} catch(e) { document.getElementById('erd-full').innerHTML = '<p style="color:var(--color-text-secondary);font-size:13px;padding:12px">Gagal merender diagram: ' + e.message + '</p>'; }
+</script>
